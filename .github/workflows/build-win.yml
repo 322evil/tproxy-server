@@ -8,14 +8,18 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23'
-      - name: Patch Windows file permissions check
+      - name: Patch Windows file permissions check globally
         shell: pwsh
         run: |
-          $file = "internal\config\config.go"
-          $content = Get-Content $file -Raw
-          $content = $content -replace 'info, err := os\.Stat\(path\)', 'info, err := os.Stat(path); _ = info'
-          $content = $content -replace 'extraPermissions :=.*', 'extraPermissions := os.FileMode(0)'
-          Set-Content $file $content
+          Get-ChildItem -Recurse -Filter *.go | ForEach-Object {
+            $c = Get-Content $_.FullName -Raw
+            if ($c -match '0077') {
+              $c = $c -replace 'info, err := os\.Stat\(([^)]+)\)', 'info, err := os.Stat($1); _ = info'
+              $c = $c -replace 'extraPermissions :=.*', 'extraPermissions := os.FileMode(0)'
+              $c = $c -replace '\.Perm\(\)\s*&\s*0077', '.Perm() & 0'
+              Set-Content $_.FullName $c
+            }
+          }
       - name: Build EXE
         run: go build -trimpath -o tproxy-server.exe ./cmd/tproxy-server
       - uses: actions/upload-artifact@v4
