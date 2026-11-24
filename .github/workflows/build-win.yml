@@ -8,7 +8,15 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23'
-      - run: go build -trimpath -o tproxy-server.exe ./cmd/tproxy-server
+      - name: Patch Windows file permissions check
+        shell: pwsh
+        run: |
+          $file = "internal\config\config.go"
+          $content = Get-Content $file -Raw
+          $content = $content -replace 'extraPermissions := info\.Mode\(\)\.Perm\(\) & 0077', '_ = info; extraPermissions := os.FileMode(0)'
+          Set-Content $file $content
+      - name: Build EXE
+        run: go build -trimpath -o tproxy-server.exe ./cmd/tproxy-server
       - uses: actions/upload-artifact@v4
         with:
           name: tproxy-server-windows
