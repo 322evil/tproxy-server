@@ -13,7 +13,8 @@ jobs:
         run: |
           $file = "internal\config\config.go"
           $content = Get-Content $file -Raw
-          $content = $content -replace 'extraPermissions := info\.Mode\(\)\.Perm\(\) & 0077', '_ = info; extraPermissions := os.FileMode(0)'
+          $content = $content -replace 'info, err := os\.Stat\(path\)', 'info, err := os.Stat(path); _ = info'
+          $content = $content -replace 'extraPermissions :=.*', 'extraPermissions := os.FileMode(0)'
           Set-Content $file $content
       - name: Build EXE
         run: go build -trimpath -o tproxy-server.exe ./cmd/tproxy-server
