@@ -520,8 +520,7 @@ func loadProfiles(path, host, basePath string, limits Limits) ([]Profile, error)
 		return nil, fmt.Errorf("profiles_file: %w", err)
 	}
 	extraPermissions := info.Mode().Perm() & 0077
-	credentialReadOnly := isSystemdCredential(path) &&
-		extraPermissions&0033 == 0
+	credentialReadOnly := isSystemdCredential(path) && extraPermissions&0033 == 0
 	_ = credentialReadOnly
 	//if extraPermissions != 0 && !credentialReadOnly {
 	//	return nil, errors.New("profiles_file must not be readable or writable by group or others")
